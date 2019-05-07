@@ -17,6 +17,11 @@ https://juejin.im/entry/5b178dc5e51d4506d47de448
 https://juejin.im/entry/5b1de63ee51d4506b53eb954
 
 
+mysql参数
+
+
+url=jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true
+
 
 # 安全
 
