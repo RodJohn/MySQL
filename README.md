@@ -2,13 +2,22 @@
 
 
 
+# 主线
 
+掘金 
 
-
-姜承尧的两本书
-掘金 极客时间
 	https://juejin.im/book/5bffcbc9f265da614b11b731
+	
 
+
+姜承尧
+
+	MySQL技术内幕:InnoDB存储引擎(第2版)
+	MySQL技术内幕:SQL编程
+
+极客时间
+
+	https://time.geekbang.org/column/intro/139
 
 
 
