@@ -14,6 +14,7 @@
 
 	MySQL技术内幕:InnoDB存储引擎(第2版)
 	MySQL技术内幕:SQL编程
+	MySQL网络培训精品班
 
 极客时间
 
