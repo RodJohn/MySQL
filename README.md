@@ -20,13 +20,14 @@
 	https://time.geekbang.org/column/intro/139
 
 
+书单
 
-mysql参数
+	http://www.iocoder.cn/Books/MySQL-books-recommended/
 
-url=jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true
+	https://juejin.im/book/5bffcbc9f265da614b11b731/section/5c6e6bad6fb9a049c43e4411
 
 
-# 参考
+# 零散
 
 查询
 
@@ -51,3 +52,12 @@ MySQL高可用方案
 分库分表
 	
 	https://mp.weixin.qq.com/s/HmUHfFedd7kEW37vnuY1sA	
+	
+	
+	
+	
+mysql参数
+
+url=jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true
+
+
