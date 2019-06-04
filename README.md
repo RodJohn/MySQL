@@ -23,6 +23,11 @@ mysql参数
 url=jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true
 
 
-# 安全
 
-https://mp.weixin.qq.com/s/YrxwkP4OdhXTb5Js1oYz5Q
+# 参考
+
+
+
+MySQL高可用方案
+
+  https://mp.weixin.qq.com/s/YrxwkP4OdhXTb5Js1oYz5Q
