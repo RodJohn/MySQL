@@ -7,10 +7,11 @@
 
 	InnoDB现有4种不同类型的行格式，分别是Compact、Redundant、Dynamic和Compressed
 
-# Compact
 
 	Compact行记录是在MySql 5.0中引入的，其设计目标是高效地存储数据 
-
+	Null Char 对比redundant
+	行溢出 对比
+	
 
 # 查看
 
