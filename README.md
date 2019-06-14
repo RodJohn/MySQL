@@ -4,6 +4,30 @@
 
 # 主线
 
+
+
+数据结构
+
+表
+索引
+
+
+server
+
+
+锁和事务
+
+
+高可用
+
+
+常见问题
+
+
+
+# 参考
+
+
 掘金 
 
 	https://juejin.im/book/5bffcbc9f265da614b11b731
@@ -16,10 +40,13 @@
 	MySQL技术内幕:SQL编程
 	MySQL网络培训精品班
 
-极客时间
+补充
 
 	https://time.geekbang.org/column/intro/139
 
+官方文档
+
+	https://dev.mysql.com/doc/refman/8.0/en/optimization.html
 
 书单
 
