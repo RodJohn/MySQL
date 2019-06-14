@@ -1,3 +1,87 @@
+# 排序
+
+filesort的效率未必比索引扫描排序低
+
+
+# 索引排序
+
+
+## 原理
+
+
+## 要求
+
+在排序之前，数据就是按照排序列顺序读取的，而且未发生改变
+
+如果有where where 中使用的相同索引命中
+如果有join 排序列必须在驱动表
+
+配合示例 说明
+
+
+单表排序
+驱动表排序
+
+# 参考
+
+https://blog.csdn.net/u011215669/article/details/82078812
+
+
+# 
+
+
+DROP TABLE IF EXISTS test.test_order;
+CREATE TABLE test.test_order(
+id int(10) not null auto_increment,
+a int(10) not null,
+b int(10) not null,
+c int(10) not null,
+PRIMARY key (`id`)
+)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
+
+
+
+
+DROP PROCEDURE IF EXISTS insert_test_order;
+##num_limit 要插入数据的数量,rand_limit 最大随机的数值
+CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
+BEGIN
+ 
+DECLARE i int default 1;
+DECLARE a int default 1;
+DECLARE b int default 1;
+DECLARE c int default 1;
+ 
+WHILE i<=num_limit do
+ 
+set a = FLOOR(rand()*rand_limit);
+set b = FLOOR(rand()*rand_limit);
+set c = FLOOR(rand()*rand_limit);
+INSERT into test.test_order values (null,a,b,c);
+set i = i + 1;
+ 
+END WHILE;
+ 
+END
+
+call insert_test_order(10000,1000);
+
+
+EXPLAIN SELECT * FROM test_order where a > 900 ORDER BY a 
+EXPLAIN SELECT * FROM test_order  ORDER BY a limit 2
+
+
+EXPLAIN SELECT * FROM test_order where a = 275
+
+ALTER TABLE `test`.`test_order` 
+ADD INDEX `idx_a`(`a`) USING BTREE;
+
+
+
+
+
+
+
 # sort 
 
 比较耗时的操作
@@ -11,11 +95,6 @@ filesort
 
 
 
-# 索引
-
-where 条件列 和 排序列 应为 相同索引 
-  where 取出 的数据 不能破坏 排序 
-
 # FileSort
 
 排序缓存 
@@ -25,15 +104,38 @@ where 条件列 和 排序列 应为 相同索引
   两次扫描  旧的 
   选择 一次 除非 blob text  数据过大
 
+# 排序算法
 
-# 索引排序
+所以filesort是否会使用磁盘取决于它操作的数据量大小。
+
+总结来说就是，filesort按排序方式来划分 分为两种：
+
+1.数据量小时，在内存中快排
+2.数据量大时，在内存中分块快排，再在磁盘上将各个块做归并
+
+数据量大的情况下涉及到磁盘io，所以效率会低一些。
+
+根据回表查询的次数，filesort又可以分为两种方式：
+
+1.回表读取两次数据(two-pass)：两次传输排序
+2.回表读取一次数据(single-pass)：单次传输排序
+
+
+
+## 全字段排序
+
+## rowId排序
+
+## 对比
+
+全字段排序是MySQL5.0以后
+
+
+
 
 
 # 内存排序
 
-单表排序
-
-只对驱动表排序
 
 # 使用临时表排序
 
