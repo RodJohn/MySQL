@@ -20,127 +20,127 @@
 
 ### 测试
 
-#### 测试环境
+测试环境
 	
-MySQL版本
+	MySQL版本
 
-	SELECT VERSION();
-	5.7.26
-	
-sort_buffer_size
+		SELECT VERSION();
+		5.7.26
 
-	show variables like '%sort_buffer_size%';
-	sort_buffer_size	262144 
-	
-表结构	
+	sort_buffer_size
 
-	DROP TABLE IF EXISTS test.test_order;
-	CREATE TABLE test.test_order(
-	id int(10) not null auto_increment,
-	a int(10) not null,
-	b int(10) not null,
-	c int(10) not null,
-	PRIMARY key (`id`)
-	)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
+		show variables like '%sort_buffer_size%';
+		sort_buffer_size	262144 
 
-存储过程
+	表结构	
 
-	DROP PROCEDURE IF EXISTS insert_test_order;
-	##num_limit 要插入数据的数量,rand_limit 最大随机的数值
-	CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
-	BEGIN
+		DROP TABLE IF EXISTS test.test_order;
+		CREATE TABLE test.test_order(
+		id int(10) not null auto_increment,
+		a int(10) not null,
+		b int(10) not null,
+		c int(10) not null,
+		PRIMARY key (`id`)
+		)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
 
-	DECLARE i int default 1;
-	DECLARE a int default 1;
-	DECLARE b int default 1;
-	DECLARE c int default 1;
+	存储过程
 
-	WHILE i<=num_limit do
+		DROP PROCEDURE IF EXISTS insert_test_order;
+		##num_limit 要插入数据的数量,rand_limit 最大随机的数值
+		CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
+		BEGIN
 
-	set a = FLOOR(rand()*rand_limit);
-	set b = FLOOR(rand()*rand_limit);
-	set c = FLOOR(rand()*rand_limit);
-	INSERT into test.test_order values (null,a,b,c);
-	set i = i + 1;
+		DECLARE i int default 1;
+		DECLARE a int default 1;
+		DECLARE b int default 1;
+		DECLARE c int default 1;
 
-	END WHILE;
+		WHILE i<=num_limit do
 
-	END
+		set a = FLOOR(rand()*rand_limit);
+		set b = FLOOR(rand()*rand_limit);
+		set c = FLOOR(rand()*rand_limit);
+		INSERT into test.test_order values (null,a,b,c);
+		set i = i + 1;
 
-插入数据
+		END WHILE;
 
-	call insert_test_order(1000,1000);
+		END
 
-### 测试方案
+	插入数据
 
-分析
+		call insert_test_order(1000,1000);
 
-	explain只能查看到使用Using filesort使用
-	需使用optimizer_trace追踪SQL
+测试方案
 
-解析
-	
-	number_of_tmp_files
+	分析
 
-		表示的是，排序过程中使用的临时文件数。
-		外部排序一般使用归并排序算法。
-		sort_buffer_size越小，需要分成的份数越多，number_of_tmp_files的值就越大。
-		
-	sort_mode
+		explain只能查看到使用Using filesort使用
+		需使用optimizer_trace追踪SQL
 
-### 测试纯内存排序
+	解析
 
-SQL
+		number_of_tmp_files
 
-	SELECT * FROM test_order ORDER BY a ; 
+			表示的是，排序过程中使用的临时文件数。
+			外部排序一般使用归并排序算法。
+			sort_buffer_size越小，需要分成的份数越多，number_of_tmp_files的值就越大。
 
-trace结果
+		sort_mode
 
-	"filesort_summary": {
-	  "rows": 1001,
-	  "examined_rows": 1000,
-	  "number_of_tmp_files": 0,
-	  "sort_buffer_size": 28032,
-	  "sort_mode": "<sort_key, additional_fields>"
-	}
-		
-解析
+测试纯内存排序
 
-	sort_mode = sort_key
-		表示使用全字段排序
-	examined_rows = 1000 
-		表示需要对全部的数据排序
-    number_of_tmp_files = 0
-		表示不使用文件排序
+	SQL
 
-### 测试部分文件排序
+		SELECT * FROM test_order ORDER BY a ; 
 
-插入数据
+	trace结果
 
-	call insert_test_order(11000,1000);
+		"filesort_summary": {
+		  "rows": 1001,
+		  "examined_rows": 1000,
+		  "number_of_tmp_files": 0,
+		  "sort_buffer_size": 28032,
+		  "sort_mode": "<sort_key, additional_fields>"
+		}
 
-SQL
+	解析
 
-	SELECT * FROM test_order ORDER BY a ; 
+		sort_mode = sort_key
+			表示使用全字段排序
+		examined_rows = 1000 
+			表示需要对全部的数据排序
+		number_of_tmp_files = 0
+			表示不使用文件排序
 
-trace结果
+测试部分文件排序
 
-	"filesort_summary": {
-	  "rows": 12782,
-	  "examined_rows": 12782,
-	  "number_of_tmp_files": 2,
-	  "sort_buffer_size": 262136,
-	  "sort_mode": "<sort_key, additional_fields>"
-	}
-		
-解析
+	插入数据
 
-	sort_mode = sort_key
-		表示使用全字段排序
-	examined_rows = 12782 
-		表示需要对全部的数据排序
-    number_of_tmp_files = 2
-		表示使用文件排序
+		call insert_test_order(11000,1000);
+
+	SQL
+
+		SELECT * FROM test_order ORDER BY a ; 
+
+	trace结果
+
+		"filesort_summary": {
+		  "rows": 12782,
+		  "examined_rows": 12782,
+		  "number_of_tmp_files": 2,
+		  "sort_buffer_size": 262136,
+		  "sort_mode": "<sort_key, additional_fields>"
+		}
+
+	解析
+
+		sort_mode = sort_key
+			表示使用全字段排序
+		examined_rows = 12782 
+			表示需要对全部的数据排序
+		number_of_tmp_files = 2
+			表示使用文件排序
 
 
 # rowid排序
