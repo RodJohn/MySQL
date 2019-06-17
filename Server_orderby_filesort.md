@@ -272,3 +272,23 @@
 		  "sort_buffer_size": 25480,
 		  "sort_mode": "<sort_key, additional_fields>"
 		}
+		
+# 常用设置
+
+
+sort_buffer_size 
+
+	查询
+		show variables like ‘%sort_buffer_size%’; 
+	设置
+		SET GLOBAL sort_buffer_size = 1024*1024; 
+
+max_length_for_sort_data
+
+	查询
+		show variables like '%max_length_for_sort_data%';
+	设置
+		SET max_length_for_sort_data = 16;
+		
+		
+				
