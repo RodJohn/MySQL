@@ -40,6 +40,10 @@
 	显示使用filesort
 
 	回表成本太大
+
+索引覆盖
+
+	EXPLAIN SELECT a,b FROM test_order ORDER BY a
 	
 限制回表
 
@@ -50,6 +54,8 @@
 
 	EXPLAIN SELECT * FROM test_order where b  > 300  ORDER BY a 
 	显示使用filesort
+
+使用其他条件（联合索引)
 
 limit 
 
@@ -77,7 +83,7 @@ limit
 
 
 
-
+	执行计划中出现了“Using temporary”，正是因为我们的排序操作需要在两个表Join之后才能进行
 
 
 # 参考
