@@ -1,85 +1,145 @@
 # filesort
 
-
-
-
+	filesort包括全字段排序和rowid排序两种
 
 # 全字段排序
 
 ## 原理
 
+获取行的排序列、主键列、查询列
 
 
 ## 流程
 
-1. 初始化 sort_buffer，确定放入 name、city、age 这三个字段；
-2. 从索引 city 找到第一个满足 city='杭州’条件的主键 id，也就是图中的 ID_X；
-3. 到主键 id 索引取出整行，取 name、city、age 三个字段的值，存入 sort_buffer 中；
-4. 从索引 city 取下一个记录的主键 id；
-5. 重复步骤 3、4 直到 city 的值不满足查询条件为止，对应的主键 id 也就是图中的
-ID_Y；
-6. 对 sort_buffer 中的数据按照字段 name 做快速排序；
-
-图中“按 name 排序”这个动作，可能在内存中完成，也可能需要使用外部排序，这取决
-于排序所需的内存和参数 sort_buffer_size。
-sort_buffer_size，就是 MySQL 为排序开辟的内存（sort_buffer）的大小。如果要排序
-的数据量小于 sort_buffer_size，排序就在内存中完成。但如果排序数据量太大，内存放
-不下，则不得不利用磁盘临时文件辅助排序
+	1. 找到满足的行；
+	2. 取出排序列、主键列、查询列的值，存入内存(sort_buffer)中；
+	3. 对排序字段做快速排序；
+	4. 如果要排序的数据量小于 sort_buffer_size，排序就在内存中完成。否则将利用磁盘临时文件辅助排序
 
 
+## 测试
 
-## 示例
+### 测试环境
+	
+MySQL版本
+
+	SELECT VERSION();
+	5.7.26
+	
+sort_buffer_size
+
+	show variables like '%sort_buffer_size%';
+	sort_buffer_size	262144 
+	
+表结构	
+
+	DROP TABLE IF EXISTS test.test_order;
+	CREATE TABLE test.test_order(
+	id int(10) not null auto_increment,
+	a int(10) not null,
+	b int(10) not null,
+	c int(10) not null,
+	PRIMARY key (`id`)
+	)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
+
+存储过程
+
+	DROP PROCEDURE IF EXISTS insert_test_order;
+	##num_limit 要插入数据的数量,rand_limit 最大随机的数值
+	CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
+	BEGIN
+
+	DECLARE i int default 1;
+	DECLARE a int default 1;
+	DECLARE b int default 1;
+	DECLARE c int default 1;
+
+	WHILE i<=num_limit do
+
+	set a = FLOOR(rand()*rand_limit);
+	set b = FLOOR(rand()*rand_limit);
+	set c = FLOOR(rand()*rand_limit);
+	INSERT into test.test_order values (null,a,b,c);
+	set i = i + 1;
+
+	END WHILE;
+
+	END
+
+插入数据
+
+	call insert_test_order(1000,1000);
+
+### 测试方案
+
+分析
+
+	explain只能查看到使用Using filesort使用
+	需使用optimizer_trace追踪SQL
+
+解析
+	
+	number_of_tmp_files
+
+		表示的是，排序过程中使用的临时文件数。
+		外部排序一般使用归并排序算法。
+		sort_buffer_size越小，需要分成的份数越多，number_of_tmp_files的值就越大。
+		
+	sort_mode
+
+### 测试纯内存排序
 
 SQL
 
+	SELECT * FROM test_order ORDER BY a ; 
 
+trace结果
 
-查看
+	"filesort_summary": {
+	  "rows": 1001,
+	  "examined_rows": 1000,
+	  "number_of_tmp_files": 0,
+	  "sort_buffer_size": 28032,
+	  "sort_mode": "<sort_key, additional_fields>"
+	}
+		
+解析
 
+	sort_mode = sort_key
+		表示使用全字段排序
+	examined_rows = 1000 
+		表示需要对全部的数据排序
+    number_of_tmp_files = 0
+		表示不使用文件排序
 
+### 测试部分文件排序
 
-	来确定一个排序语句是否使用了临时文件
+插入数据
 
+	call insert_test_order(11000,1000);
 
-/* 打开optimizer_trace，只对本线程有效 */
-SET optimizer_trace='enabled=on'; 
+SQL
 
-/* @a保存Innodb_rows_read的初始值 */
-select VARIABLE_VALUE into @a from  performance_schema.session_status where variable_name = 'Innodb_rows_read';
+	SELECT * FROM test_order ORDER BY a ; 
 
-/* 执行语句 */
-select city, name,age from t where city='杭州' order by name limit 1000; 
+trace结果
 
-/* 查看 OPTIMIZER_TRACE 输出 */
-SELECT * FROM `information_schema`.`OPTIMIZER_TRACE`\G
+	"filesort_summary": {
+	  "rows": 12782,
+	  "examined_rows": 12782,
+	  "number_of_tmp_files": 2,
+	  "sort_buffer_size": 262136,
+	  "sort_mode": "<sort_key, additional_fields>"
+	}
+		
+解析
 
-/* @b保存Innodb_rows_read的当前值 */
-select VARIABLE_VALUE into @b from performance_schema.session_status where variable_name = 'Innodb_rows_read';
-
-/* 计算Innodb_rows_read差值 */
-select @b-@a;
-这个方法是通过查看 OPTIMIZER_TRACE 的结果来确认的，你可以从 number_of_tmp_files中看到是否使用了临时文件。
-
-
-
-number_of_tmp_files
-
-	表示的是，排序过程中使用的临时文件数。
-	外部排序一般使用归并排序算法。
-	sort_buffer_size越小，需要分成的份数越多，number_of_tmp_files的值就越大。
-
-
-接下来，我再和你解释一下图4中其他两个值的意思。
-我们的示例表中有4000条满足city='杭州’的记录，所以你可以看到 
-
-examined_rows
-
-	表示参与排序的行数是4000行。
-	sort_mode 里面的packed_additional_fields的意思是，排序过程对字符串做了“紧凑”处理。即使name字段的定义是varchar(16)，在排序过程中还是要按照实际长度来分配空间的。
-同时，最后一个查询语句select @b-@a 的返回结果是4000，表示整个执行过程只扫描了4000行。
-
-
-
+	sort_mode = sort_key
+		表示使用全字段排序
+	examined_rows = 12782 
+		表示需要对全部的数据排序
+    number_of_tmp_files = 2
+		表示使用文件排序
 
 
 # rowid排序
@@ -138,20 +198,6 @@ max_length_for_sort_data，是MySQL中专门控制用于排序的行数据的长
 随机IO
 
 
-
-
-
-
-
-
-
-filesort
-	 使用内存或者文件进行 慢
-	 使用内存或者文件进行
-	
-	优缺点
-	
-	
 	
 	# FileSort
 	
@@ -178,14 +224,7 @@ filesort
 	1.回表读取两次数据(two-pass)：两次传输排序
 	2.回表读取一次数据(single-pass)：单次传输排序
 	
-	
-	
-	## 全字段排序
-	
-	## rowId排序
-	
-	## 对比
-	
+
 	全字段排序是MySQL5.0以后
 	
 	
@@ -197,11 +236,7 @@ filesort
 	
 	# 使用临时表排序
 	
-	## 示例
-	
-	SQL
-	
-	EXPLAIN
+
   
 
 
