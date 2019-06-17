@@ -1,98 +1,89 @@
-# 排序
-
-filesort的效率未必比索引扫描排序低
-
 
 # 索引排序
-
 
 ## 原理
 
 
 ## 要求
 
-在排序之前，数据就是按照排序列顺序读取的，而且未发生改变
+	在排序之前，数据就是按照排序列顺序读取的，而且未发生改变
 
-如果有where where 中使用的相同索引命中
-如果有join 排序列必须在驱动表
+	如果有where where 中使用的相同索引命中
+	如果有join 排序列必须在驱动表
+	如果是二级索引 则要考虑回表代价 
 
-主键索引起效 
-
-二级索引 看数量  回表  limt 范围
-
-配合示例 说明
+	主键索引起效
 
 
-单表排序
-驱动表排序
+# 主键排序
+
+
+	EXPLAIN SELECT * FROM test_order  ORDER BY id 
+
+	EXPLAIN SELECT * FROM test_order where a > 100  ORDER BY id 
+
+
+# 二级索引
+
+
+未添加索引
+
+	EXPLAIN SELECT * FROM test_order ORDER BY a 
+	显示使用filesort
+
+添加二级索引
+
+	ALTER TABLE `test`.`test_order` 
+	ADD INDEX `idx_a`(`a`) USING BTREE;
+
+	EXPLAIN SELECT * FROM test_order ORDER BY a 
+	显示使用filesort
+
+	回表成本太大
+	
+限制回表
+
+	EXPLAIN SELECT * FROM test_order where a > 900 ORDER BY a 
+	Using index condition  idx_a 
+
+使用其他条件
+
+	EXPLAIN SELECT * FROM test_order where b  > 300  ORDER BY a 
+	显示使用filesort
+
+limit 
+
+	EXPLAIN SELECT * FROM test_order  ORDER BY a limit 10
+	Using index condition  idx_a 
+
+
+# 联表
+
+
+	DROP TABLE IF EXISTS test.test_code;
+	CREATE TABLE test.test_code(
+	id int(10) not null auto_increment,
+	code int(10) not null,
+	PRIMARY key (`id`)
+	)ENGINE INNODB DEFAULT CHARSET utf8 ;
+
+
+	EXPLAIN SELECT * FROM test_order o JOIN test_code c on o.id = c.id  ORDER BY o.id 
+
+
+	| id | select_type | table | partitions | type   | key     | key_len | ref       | rows | filtered | Extra           
+	|  1 | SIMPLE      | c     | NULL       | ALL    | NULL    | NULL    | NULL      |    4 |   100.00 | Using temporary; Using filesort 
+	|  1 | SIMPLE      | o     | NULL       | eq_ref | PRIMARY | 4       | test.c.id |    1 |   100.00 | NULL           
+
+
+
+
+
 
 # 参考
 
 https://blog.csdn.net/u011215669/article/details/82078812
 
 
-# 
-
-
-DROP TABLE IF EXISTS test.test_order;
-CREATE TABLE test.test_order(
-id int(10) not null auto_increment,
-a int(10) not null,
-b int(10) not null,
-c int(10) not null,
-PRIMARY key (`id`)
-)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
-
-
-
-
-DROP PROCEDURE IF EXISTS insert_test_order;
-##num_limit 要插入数据的数量,rand_limit 最大随机的数值
-CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
-BEGIN
- 
-DECLARE i int default 1;
-DECLARE a int default 1;
-DECLARE b int default 1;
-DECLARE c int default 1;
- 
-WHILE i<=num_limit do
- 
-set a = FLOOR(rand()*rand_limit);
-set b = FLOOR(rand()*rand_limit);
-set c = FLOOR(rand()*rand_limit);
-INSERT into test.test_order values (null,a,b,c);
-set i = i + 1;
- 
-END WHILE;
- 
-END
-
-call insert_test_order(10000,1000);
-
-
-EXPLAIN SELECT * FROM test_order where a > 900 ORDER BY a 
-EXPLAIN SELECT * FROM test_order  ORDER BY a limit 2
-
-
-EXPLAIN SELECT * FROM test_order where a = 275
-
-ALTER TABLE `test`.`test_order` 
-ADD INDEX `idx_a`(`a`) USING BTREE;
-
-
-
-
-
-
-
-# sort 
-
-比较耗时的操作
-
-索引
- 需要维护索引 特定条件下才能用 
-filesort
- 使用内存或者文件进行
 
 
