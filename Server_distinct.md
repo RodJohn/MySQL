@@ -9,14 +9,52 @@
 
 # 原理
 
-DISTINCT实际上和GROUP BY的操作非常相似，只不过是在GROUP BY之后的每组中只取出一条记录而已。
-所以，DISTINCT的实现和GROUP BY的实现也基本差不多，没有太大的区别。
-同样可以通过松散索引扫描或者是紧凑索引扫描来实现，当然，在无法仅仅使用索引即能完成DISTINCT的时候，MySQL只能通过临时表来完成。
-但是，和GROUP BY有一点差别的是，DISTINCT并不需要进行排序。
-也就是说，在仅仅只是DISTINCT操作的Query如果无法仅仅利用索引完成操作的时候，MySQL会利用临时表来做一次数据的“缓存”，但是不会对临时表中的数据进行filesort操作。
-当然，如果我们在进行DISTINCT的时候还使用了GROUP BY并进行了分组，并使用了类似于MAX之类的聚合函数操作，就无法避免filesort了。
+原理
+
+	获取数据放入临时表，
+	分组，
+	从每组中只取出一条记录
+	和GROUP BY的操作非常相似
+
+类型
+
+	执行方法和groupby类似 分为使用临时表，使用索引（松散索引，紧凑索引）
+
+# 示例
+
+	环境
+		
+		SELECT VERSION()
+		5.6.17
+		
+		 索引bc
+		
+
+	临时表
+
+		EXPLAIN SELECT distinct(a) FROM test_order 
+
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	ALL			11152	Using temporary
 
 
+	紧凑索引
 
+		EXPLAIN SELECT DISTINCT b,c FROM test_order
+
+		id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	index	idx_b_c	idx_b_c	8		11152	Using index
+
+	松散索引
+
+		EXPLAIN  SELECT DISTINCT b FROM test_order GROUP BY b
+
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	range	idx_b_c	4		2231	Using index for group-by
+
+		松散索引显示的是Using index for group-by
+
+
+# 参考
 
 https://www.cnblogs.com/ggjucheng/archive/2012/11/18/2776449.html
