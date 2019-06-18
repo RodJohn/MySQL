@@ -1,41 +1,69 @@
+# 索引分组
 
+使用索引  获取的时候  排序
 
-
+索引分组包括使用紧凑索引和松散索引
 
 # 紧凑索引
 
-使用紧凑（Tight）索引扫描实现GROUP BY
+原理
 
-紧凑索引扫描实现GROUP BY和松散索引扫描的区别主要在于他需要在扫描索引的时候，
-读取所有满足条件的索引键，然后再根据读取的数据来完成GROUP BY操作得到相应结果。
+	利用索引排序和分组
+
+示例
+
+	环境
+
+		ALTER TABLE `test`.`test_order` 
+		ADD INDEX `idx_b_c`(`b`, `c`) USING BTREE;
+
+	SQL(index用于排序)
+
+		EXPLAIN SELECT b,c FROM test_order where a > 500 GROUP BY b,c
+
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	index	idx_b_c	8		11152	Using where
+
+	SQL(index用于搜索、排序、分组 索引覆盖)
+
+		EXPLAIN SELECT b,c FROM test_order GROUP BY b,c
+		
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	index	idx_b_c	8		11152	Using index
+
 
 
 # 松散索引
 
 
-1. 使用松散（Loose）索引扫描实现GROUP BY
+原理
 
-实际上就是当MySQL完全利用索引扫描来实现GROUP BY的时候，
-并不需要扫描所有满足条件的索引键即可完成操作得出结果。
-
-优化Group By最有效的办法是当可以直接使用索引来完全获取需要group的字段。
-使用这个访问方法时，MySQL使用对关键字排序的索引的类型（比如BTREE索引）。
-这使得索引中用于group的字段不必完全涵盖WHERE条件中索引对应的key。由于只包含索引中关键字的一部分，因此称为松散的索引扫描。
-
-
-松散索引扫描，此类查询的EXPLAIN输出显示Extra列的Using index for group-by
-
-
-
-为什么松散索引扫描的效率会很高？
-
-因为在没有WHERE子句，也就是必须经过全索引扫描的时候，
-松散索引扫描需要读取的键值数量与分组的组数量一样多，也就是说比实际存在的键值数目要少很多。
-而在WHERE子句包含范围判断式或者等值表达式的时候，松散索引扫描查找满足范围条件的每个组的第1个关键字，并且再次读取尽可能最少数量的关键字。
+	紧凑索引需要读取所有满足条件的索引键，然后再根据读取的数据来完成GROUP BY操作得到相应结果。
+	这种方法只需要扫描索引中的少部分数据，而不是所有满足where条件的数据，所以这个方法叫做loose index scan
+	(其实我还不是太懂)
 
 示例
 
-explain
+	环境
+
+		同上
+		注意
+		松散索引扫描，此类查询的EXPLAIN输出显示Extra列的Using index for group-by
+		在5.6版本下显示为Using index for group-by
+		5.7版本显示为Using index 
+
+	SQL
+
+		EXPLAIN  SELECT b FROM test_order GROUP BY b
+		
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	range	idx_b_c	4		2231	Using index for group-by
+
+		EXPLAIN  SELECT b,max(c) FROM test_order GROUP BY b
+		
+		id	select_type	table	type	key	key_len	ref	rows	Extra
+		1	SIMPLE	test_order	range	idx_b_c	4		2231	Using index for group-by
+
 
 
 
