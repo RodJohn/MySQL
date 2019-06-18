@@ -21,64 +21,7 @@
 
 数据
 
-	DROP TABLE IF EXISTS test.test_order;
-	CREATE TABLE test.test_order(
-	id int(10) not null auto_increment,
-	a int(10) not null,
-	b int(10) not null,
-	c int(10) not null,
-	PRIMARY key (`id`)
-	)ENGINE INNODB DEFAULT CHARSET utf8 COMMENT '测试表';
-	
-	DROP TABLE IF EXISTS test.test_code;
-	CREATE TABLE test.test_code(
-	id int(10) not null auto_increment,
-	code int(10) not null,
-	PRIMARY key (`id`)
-	)ENGINE INNODB DEFAULT CHARSET utf8 ;
-
-	
-	DROP PROCEDURE IF EXISTS insert_test_order;
-	CREATE PROCEDURE insert_test_order(in num_limit int,in rand_limit int)
-	BEGIN
-
-	DECLARE i int default 1;
-	DECLARE a int default 1;
-	DECLARE b int default 1;
-	DECLARE c int default 1;
-
-	WHILE i<=num_limit do
-
-	set a = FLOOR(rand()*rand_limit);
-	set b = FLOOR(rand()*rand_limit);
-	set c = FLOOR(rand()*rand_limit);
-	INSERT into test.test_order values (null,a,b,c);
-	set i = i + 1;
-
-	END WHILE;
-
-	END
-
-	
-	DROP PROCEDURE IF EXISTS insert_test_code;
-	CREATE PROCEDURE insert_test_code(in num_limit int,in rand_limit int)
-	BEGIN
-
-	DECLARE i int default 1;
-	DECLARE a int default 1;
-
-	WHILE i<=num_limit do
-
-	set a = FLOOR(rand()*rand_limit);
-	INSERT into test.test_code values (null,a);
-	set i = i + 1;
-
-	END WHILE;
-
-	END
-
-	call insert_test_order(1100,1000);
-	call insert_test_code(10,100);
+	同于blob示例
 
 
 ### 测试(选择有索引的作为被驱动表)
