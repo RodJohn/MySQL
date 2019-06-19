@@ -65,6 +65,8 @@ limit
 
 # 联表
 
+链表需使用主键索引 避免BNL
+
 
 	DROP TABLE IF EXISTS test.test_code;
 	CREATE TABLE test.test_code(
