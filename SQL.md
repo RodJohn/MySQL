@@ -29,7 +29,6 @@
 
 ## 隔离级别
 
-SQL标准的事务隔离级别包括：读未提交（read uncommitted）、读提交（read committed）、可重复读（repeatable read）和串行化（serializable ）
 
 读未提交是指，一个事务还没提交时，它做的变更就能被别的事务看到。
 读提交是指，一个事务提交之后，它做的变更才会被其他事务看到。
