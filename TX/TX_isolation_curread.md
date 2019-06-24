@@ -9,6 +9,28 @@
 
     当前读的规则，就是要能读到所有已经提交的记录的最新值。
     如果没提交 就等待
+    
+    锁实现
+    
+
+# 隔离性
+
+脏写 行锁锁住写不了
+脏读 行锁锁住写不了
+不可重复读  行锁锁住
+幻读  间隙锁锁住 插入不了
+
+# 语句
+
+当前读：特殊的读操作，插入/更新/删除操作，属于当前读，需要加锁。
+select * from table where ? lock in share mode;
+select * from table where ? for update;
+insert into table values (…);
+update table set ? where ?;
+delete from table where ?;
+
+
+
 
 # 示例
 

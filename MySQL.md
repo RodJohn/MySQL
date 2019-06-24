@@ -101,6 +101,14 @@ innodb redo undo日志
 
 
 
+# 
+
+不选择ALiSQL
+
+    优化措施不一样
+
+
+
 
 
 
