@@ -1,38 +1,21 @@
 
 # 当前读
 
-定义
+    更新语句时
+    需要先读取指定的行记录然后修改
+    这样的读取就是当前读  
+
+# 原理
     
-    是针对修改提出的读取策略
-    当前读就是读到记录的最新值
-    ，读取的是记录的最新版本，并且，当前读返回的记录，都会加上锁，保证其他事务不会再并发修改这条记录。
+    当前读需要读取记录的最新的提交值，
     
-# 语句
-
-当前读
-
-    select * from table where ? lock in share mode;
-    select * from table where ? for update;
-
-更新
-
-    更新操作，包含当前读的部分
-    更新数据都是先读后写的，而这个读，只能读当前的值，称为“当前读”（current read）。
-    update之前要查询
-    insert into table values (…);
-    update table set ? where ?;
-    delete from table where ?;
+    当前读对行记录添加的是排他行锁
+    而且直到事务提交才会释放锁
+    所以不会发生脏写、脏读和不可重复读
+    同时为了避免幻读，
+    innodb会对对记录添加间隙锁防止插入记录    
 
 
-# 隔离性
-
-    innodb使用两阶段提交的行锁、间隙锁来实行当前读的隔离级别        
- 
-     脏写 行锁锁住写不了
-     脏读 行锁锁住写不了
-     不可重复读  行锁锁住
-     幻读  间隙锁锁住 插入不了
- 
 # 缺点
     
     加锁
@@ -40,4 +23,16 @@
 
 
 
+# 语句
+
+当前读语法
+
+    select * from table where ? lock in share mode; 加共享锁
+    select * from table where ? for update; 加排它锁
+
+包含当前读
+
+    update table set ? where ?;
+    delete from table where ?;
+    insert into table values (…) ??
    
