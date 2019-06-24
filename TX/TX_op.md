@@ -151,6 +151,21 @@ ROLLBACK TO identifier；
     插入第二条记录的时候，db抛出了1062错误，但是并没有自动回滚，能查出前一条insert的记录
 
 
+# 语法    
+    
+设置隔离级别
+	
+	
+	set session transaction isolatin level repeatable read;
+	set global transaction isolation level repeatable read;
+	
+查看隔离级别
+ 
+	select @@tx_isolation;
+	select @@global.tx_isolation;
+
+
+
 
 # 长事务
 
