@@ -3,6 +3,7 @@
 
     对于普通select语句
     innodb采用快照读的方式
+    (快照读原名一致性非锁定读 consistent nonlocking read)
 
 # 原理
     

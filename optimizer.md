@@ -11,3 +11,6 @@
 
 查询
 
+
+
+bufferpool命中率
