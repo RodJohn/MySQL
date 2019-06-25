@@ -16,16 +16,6 @@ MySQL自带的引擎是MyISAM，但是MyISAM没有crash-safe的能力，binlog�
 而InnoDB是另一个公司以插件形式引入MySQL的，既然只依靠binlog是没有crash-safe能力的，所以InnoDB使用另外一套日志系统——也就是redo log来实现crash-safe能力
 
 
-# 格式
-
-
-binlog_format有三种可选配置：STATEMENT、ROW、MIXED，相应地，基于这三种模式的Replication分别称为SBR(STATEMENT BASED Replication)、RBR、MBR。 同时，我们也知道，MySQL Replication可以支持比较灵活的binlog规则，可以设置某些库、某些表记录或者忽略不记录。
-
-通常地，我们强烈建议不要设置这些规则，默认都记录就好，在Slave上也是如此，默认所有库都进行Replicate，不要设置DO、IGNORE、REWRITE规则。
-
-
-
-
 # 对比
 
 这两种日志有以下三点不同。
@@ -78,7 +68,9 @@ redo log是循环写的，空间固定会用完；binlog是可以追加写入的
 
 # 参数
 
-redo log用于保证crash-safe能力。innodb_flush_log_at_trx_commit这个参数设置成1的时候，表示每次事务的redo log都直接持久化到磁盘。这个参数我建议你设置成1，这样可以保证MySQL异常重启之后数据不丢失。sync_binlog这个参数设置成1的时候，表示每次事务的binlog都持久化到磁盘。这个参数我也建议你设置成1，这样可以保证MySQL异常重启之后binlog不丢失。
+redo log用于保证crash-safe能力。innodb_flush_log_at_trx_commit这个参数设置成1的时候，表示每次事务的redo log都直接持久化到磁盘。
+这个参数我建议你设置成1，这样可以保证MySQL异常重启之后数据不丢失
+。sync_binlog这个参数设置成1的时候，表示每次事务的binlog都持久化到磁盘。这个参数我也建议你设置成1，这样可以保证MySQL异常重启之后binlog不丢失。
 
 
 
