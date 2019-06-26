@@ -10,7 +10,7 @@
     
 # innodb_flush_log_at_trx_commit
 
-
+    redolog 
     
 
 # 长事务

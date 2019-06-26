@@ -1,5 +1,10 @@
 
 
+# 
+
+只讨论innodb
+
+
 # 实现 
 
 一致性
@@ -25,17 +30,12 @@
 
 调整
 
-innodb_flush_log_at_trx_commit 三种取值 0 、1、2 对性能有很大影响
 
 
-可能丢失1秒的事务数据。
-log buffer
-
-http://blog.sina.com.cn/s/blog_53b13d9501011uma.html
-https://blog.csdn.net/joeyon1985/article/details/44828329
-https://www.cnblogs.com/yuyue2014/p/3735035.html
 
 # redolog
+
+顺序写 顺序读
 
 流程
 
