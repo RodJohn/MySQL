@@ -51,6 +51,7 @@ server
 姜承尧
 
 	MySQL技术内幕:InnoDB存储引擎(第2版)
+	    （https://blog.csdn.net/shenchaohao12321/article/category/8075653/4?）
 	MySQL技术内幕:SQL编程
 	MySQL网络培训精品班
 
